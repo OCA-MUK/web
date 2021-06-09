@@ -77,6 +77,23 @@ odoo.define("web_advanced_search", function(require) {
         }),
 
         /**
+         * Handle dropdown hidden event to prevent the menu from closing when using a
+         * relational field
+         *
+         * @override
+         */
+        start: function() {
+            this._super.apply(this, arguments);
+            this.$el.on("hide.bs.dropdown", function() {
+                var $modal = $(".o_technical_modal.show");
+                return !(
+                    ($modal.length && !$modal.has($(this)).length) ||
+                    $("body.oe_wait").length
+                );
+            });
+        },
+
+        /**
          * @override
          */
         init: function() {
@@ -168,8 +185,8 @@ odoo.define("web_advanced_search", function(require) {
             // Create dummy record with only the field the user is searching
             const params = {
                 fieldNames: [this.field.name],
-                modelName: this.dataset.model,
-                context: this.dataset.context,
+                modelName: this.field.relation,
+                context: this.field.context,
                 type: "record",
                 viewType: "default",
                 fieldsInfo: {
@@ -203,7 +220,7 @@ odoo.define("web_advanced_search", function(require) {
         start: function() {
             const result = this._super.apply(this, arguments);
             // Render the initial widget
-            result.done($.proxy(this, "show_inputs", $("<input value='='/>")));
+            result.then($.proxy(this, "show_inputs", $("<input value='='/>")));
             return result;
         },
 
